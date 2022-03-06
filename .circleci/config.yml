@@ -9,9 +9,11 @@ jobs:
       APIGEE_ENV: default-env
       APIGEE_ORG: bap-emea-apigee-5
     steps:
+      - checkout
       - run:
           name: Provision VPC and EKS cluster
           command: |
+            echo "trace 1"
             pwd
             ls /root/project
             sed -i "s/target_apigee_env/$APIGEE_ENV/g" ../EdgeConfig/edge.json
