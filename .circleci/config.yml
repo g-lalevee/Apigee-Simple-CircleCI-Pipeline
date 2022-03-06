@@ -22,14 +22,14 @@ jobs:
             # Prod branch for Apigee prod environment
             else
               if [ $CIRCLE_BRANCH == "prod" ]; then
-                APIGEE_DEPLOYMENT_SUFFIX=""
-                APIGEE_ENV="prod"
-                APIGEE_ORG="$DEFAULT_APIGEE_ORG"
+                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                echo "export APIGEE_ENV=$CIRCLE_BRANCH" >> $BASH_ENV
+                echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
               # All other branches are deployed as separate proxies with suffix in the test environment
               else
-                APIGEE_DEPLOYMENT_SUFFIX=${CIRCLE_BRANCH// /-} 
-                APIGEE_ENV="$DEFAULT_APIGEE_ENV"
-                APIGEE_ORG="$DEFAULT_APIGEE_ORG"
+                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
+                echo "export APIGEE_DEPLOYMENT_SUFFIX=${CIRCLE_BRANCH// /-}" >> $BASH_ENV
               fi
             fi
   
