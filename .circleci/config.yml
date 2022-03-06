@@ -15,7 +15,7 @@ jobs:
       - checkout
       - run:
           name: setup-environment
-          command:
+          command: |
             cd /root/project
             echo $GCP_SERVICE_ACCOUNT > sa.json
       - run:
