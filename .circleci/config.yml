@@ -6,7 +6,7 @@ jobs:
       - image: maven:latest
     environment:
       API_VERSION: "googleapi"
-      APIGEE_ENV: default-env
+      APIGEE_ENV: default-dev
       APIGEE_ORG: bap-emea-apigee-5
     steps:
       - checkout
