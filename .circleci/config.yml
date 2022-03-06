@@ -6,8 +6,8 @@ jobs:
       - image: maven:latest
     environment:
       API_VERSION: "googleapi"
-      APIGEE_ENV: default-dev
-      APIGEE_ORG: bap-emea-apigee-5
+      DEFAULT_APIGEE_ENV: default-dev
+      DEFAULT_APIGEE_ORG: bap-emea-apigee-5
       AUTHOR_EMAIL: popo@popo.com
       GIT_BRANCH: main
       APIGEE_DEPLOYMENT_SUFFIX: ""
@@ -16,6 +16,26 @@ jobs:
       - run:
           name: setup-environment
           command: |
+            # Main branch for Apigee test environment
+            if [ $CIRCLE_BRANCH == "main" ]; then
+                APIGEE_DEPLOYMENT_SUFFIX=""
+                APIGEE_ENV="$DEFAULT_APIGEE_ENV"
+                APIGEE_ORG="$DEFAULT_APIGEE_ORG"
+            # Prod branch for Apigee prod environment
+            else
+              if [ $CIRCLE_BRANCH == "prod" ]; then
+                APIGEE_DEPLOYMENT_SUFFIX=""
+                APIGEE_ENV="prod"
+                APIGEE_ORG="$DEFAULT_APIGEE_ORG"
+              # All other branches are deployed as separate proxies with suffix in the test environment
+              else
+                APIGEE_DEPLOYMENT_SUFFIX=${CIRCLE_BRANCH// /-} 
+                APIGEE_ENV="$DEFAULT_APIGEE_ENV"
+                APIGEE_ORG="$DEFAULT_APIGEE_ORG"
+              fi
+            fi
+
+            # Generate SA file from project variable
             cd /root/project
             echo $GCP_SERVICE_ACCOUNT > sa.json
       - run:
