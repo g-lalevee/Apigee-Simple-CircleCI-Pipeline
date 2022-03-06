@@ -14,9 +14,8 @@ jobs:
           name: Provision VPC and EKS cluster
           command: |
             echo "trace 1"
-            pwd
-            ls /root/project
-            sed -i "s/target_apigee_env/$APIGEE_ENV/g" ../EdgeConfig/edge.json
+            cd /root/project
+            sed -i "s/target_apigee_env/$APIGEE_ENV/g" ./EdgeConfig/edge.json
             mvn install -Pgoogleapi -Dapigee.org=$c -Denv=$APIGEE_ENV -Dsa=$GCP_SERVICE_ACCCOUNT -Dapigee.config.file=./EdgeConfig/edge.json -Dapigee.config.options=update
   
           
