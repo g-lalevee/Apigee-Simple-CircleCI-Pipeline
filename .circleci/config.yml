@@ -1,14 +1,23 @@
 version: 2.1
-orbs:
-  node: circleci/node@4.7.0
+
 jobs:
-  build:
-    executor:
-      name: node/default
-      tag: '10.4'
+  deploy_apigee_proxy:
+    docker:
+      - image: maven:latest
+    environment:
+      API_VERSION: "googleapi"
+      APIGEE_ENV: default-env
+      APIGEE_ORG: bap-emea-apigee-5
     steps:
-      - checkout
-      - node/with-cache:
-          steps:
-            - run: npm install
-      - run: npm run test
+      - run:
+          name: Provision VPC and EKS cluster
+          command: |
+            sed -i "s/target_apigee_env/$APIGEE_ENV/g" ./EdgeConfig/edge.json
+            mvn install -Pgoogleapi -Dapigee.org=$c -Denv=$APIGEE_ENV -Dsa=$GCP_SERVICE_ACCCOUNT -Dapigee.config.file=./EdgeConfig/edge.json -Dapigee.config.options=update
+  
+          
+workflows:
+  version: 2
+  dev_plan:
+    jobs:
+      - deploy_apigee_proxy
