@@ -1,7 +1,7 @@
 version: 2.1
 
 jobs:
-  static-code-analysis:
+  install-dependencies:
     docker:
       - image: node:12-alpine
     steps:
@@ -11,6 +11,11 @@ jobs:
           command: |
             cd /root/project
             npm install --silent --no-fund
+
+  static-code-analysis:
+    docker:
+      - image: node:12-alpine
+    steps:
       - run:
           name: apigeelint
           command: ./node_modules/apigeelint/cli.js -s ./apiproxy -f html.js -e PO013 > ./apigeelint-out.html
@@ -85,6 +90,12 @@ workflows:
   version: 2
   apigee-deployment-and-tests:
     jobs:
-      - static-code-analysis
-      - unit-test
+      - install-dependencies
+      - static-code-analysis:
+          requires: 
+            - install-dependencies
+      - unit-test:
+          requires: 
+            - install-dependencies
+
  #     - deploy_apigee
