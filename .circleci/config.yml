@@ -1,6 +1,7 @@
 version: 2.1
 
 jobs:
+
   install-dependencies:
     docker:
       - image: node:12-alpine
@@ -11,6 +12,37 @@ jobs:
           command: |
             cd /root/project
             npm install --silent --no-fund
+      - run:
+          name: setup-environment
+          command: |
+            # API_VERSION: "apigeeapi" 
+            # or 
+            API_VERSION: "googleapi"
+            DEFAULT_APIGEE_ENV: "default-dev"
+            DEFAULT_APIGEE_ORG: "bap-emea-apigee-5"
+           
+            TEST_HOST: 34.117.38.184.nip.io
+            #TEST_HOST: "$(APIGEE_ORG)-$(APIGEE_ENV).apigee.net"
+
+            GIT_BRANCH=$CIRCLE_BRANCH
+            # Main branch for Apigee test environment
+            if [ $CIRCLE_BRANCH == "main" ]; then
+                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
+                echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
+            # Prod branch for Apigee prod environment
+            else
+              if [ $CIRCLE_BRANCH == "prod" ]; then
+                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                echo "export APIGEE_ENV=$CIRCLE_BRANCH" >> $BASH_ENV
+                echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
+              # All other branches are deployed as separate proxies with suffix in the test environment
+              else
+                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
+                echo "export APIGEE_DEPLOYMENT_SUFFIX=${CIRCLE_BRANCH// /-}" >> $BASH_ENV
+              fi
+            fi
       - persist_to_workspace:
           root: .
           paths:
@@ -44,35 +76,11 @@ jobs:
   deploy_apigee:
     docker:
       - image: maven:latest
-    environment:
-      API_VERSION: "googleapi"
-      DEFAULT_APIGEE_ENV: default-dev
-      DEFAULT_APIGEE_ORG: bap-emea-apigee-5
     steps:
       - checkout
       - run:
-          name: setup-environment
+          name: get-GCP-Service-Account
           command: |
-            GIT_BRANCH=$CIRCLE_BRANCH
-            # Main branch for Apigee test environment
-            if [ $CIRCLE_BRANCH == "main" ]; then
-                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
-                echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
-                echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
-            # Prod branch for Apigee prod environment
-            else
-              if [ $CIRCLE_BRANCH == "prod" ]; then
-                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
-                echo "export APIGEE_ENV=$CIRCLE_BRANCH" >> $BASH_ENV
-                echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
-              # All other branches are deployed as separate proxies with suffix in the test environment
-              else
-                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
-                echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
-                echo "export APIGEE_DEPLOYMENT_SUFFIX=${CIRCLE_BRANCH// /-}" >> $BASH_ENV
-              fi
-            fi
-  
             # Generate SA file from project variable
             cd /root/project
             echo $GCP_SERVICE_ACCOUNT > sa.json
@@ -109,7 +117,6 @@ jobs:
             sed -i "s/organization_hostname/$TEST_HOST/g" ./test/integration/features/support/init.js
             node ./node_modules/cucumber/bin/cucumber-js ./test/integration --format json:./report.json
             node ./test/integration/index.js
-
 
 
 
