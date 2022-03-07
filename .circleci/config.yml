@@ -30,7 +30,10 @@ jobs:
       - run:
           name: eslint
           command: ./node_modules/eslint/bin/eslint.js -c ./.eslintrc-jsc.yml --format html ./apiproxy/resources/jsc > ./eslint-out.html
-  
+      - store_artifacts:
+          path: .
+          destination: "*-out.html" 
+
   unit-test:
     docker:
       - image: node:12-alpine
@@ -41,6 +44,10 @@ jobs:
       - run:
           name: mocha
           command: ./node_modules/nyc/bin/nyc.js --reporter=html --reporter=text ./node_modules/mocha/bin/_mocha ./test/unit
+      - store_artifacts:
+          path: ./coverage/
+          destination: index.html
+
 
   deploy_apigee:
     docker:
@@ -125,7 +132,9 @@ jobs:
             sed -i "s/organization_hostname/$TEST_HOST/g" ./test/integration/features/support/init.js
             node ./node_modules/cucumber/bin/cucumber-js ./test/integration --format json:./report.json
             node ./test/integration/index.js
-
+      - store_artifacts:
+          path: .
+          destination: cucumber_report.html
 
 workflows:
   version: 2
