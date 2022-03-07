@@ -26,15 +26,19 @@ jobs:
           at: .
       - run:
           name: apigeelint
-          command: ./node_modules/apigeelint/cli.js -s ./apiproxy -f html.js -e PO013 > ./apigeelint-out.html
+          command: |
+            mkdir apigeelint
+            ./node_modules/apigeelint/cli.js -s ./apiproxy -f html.js -e PO013 > ./apigeelint/apigeelint-out.html
       - store_artifacts:
-          path: .
+          path: apigeelint
           destination: apigeelint-out.html
       - run:
           name: eslint
-          command: ./node_modules/eslint/bin/eslint.js -c ./.eslintrc-jsc.yml --format html ./apiproxy/resources/jsc > ./eslint-out.html
+          command: |
+            mkdir eslint
+            ./node_modules/eslint/bin/eslint.js -c ./.eslintrc-jsc.yml --format html ./apiproxy/resources/jsc > ./eslint/eslint-out.html
       - store_artifacts:
-          path: .
+          path: eslint
           destination: eslint-out.html
 
   unit-test:
@@ -135,8 +139,11 @@ jobs:
             sed -i "s/organization_hostname/$TEST_HOST/g" ./test/integration/features/support/init.js
             node ./node_modules/cucumber/bin/cucumber-js ./test/integration --format json:./report.json
             node ./test/integration/index.js
+
+            mkdir apickli
+            mv cucumber_report.html apickli
       - store_artifacts:
-          path: .
+          path: apickli
           destination: cucumber_report.html
 
 workflows:
