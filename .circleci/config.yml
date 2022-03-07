@@ -146,6 +146,7 @@ workflows:
 #          requires: 
 #            - static-code-analysis
 #            - unit-test
-      - integration-test
-#          requires: 
-#            - deploy_apigee
+      - integration-test:
+         requires: 
+            - install-dependencies
+ #           - deploy_apigee
