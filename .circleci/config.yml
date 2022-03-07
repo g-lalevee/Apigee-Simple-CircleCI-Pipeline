@@ -27,12 +27,15 @@ jobs:
       - run:
           name: apigeelint
           command: ./node_modules/apigeelint/cli.js -s ./apiproxy -f html.js -e PO013 > ./apigeelint-out.html
+      - store_artifacts:
+          path: .
+          destination: apigeelint-out.html
       - run:
           name: eslint
           command: ./node_modules/eslint/bin/eslint.js -c ./.eslintrc-jsc.yml --format html ./apiproxy/resources/jsc > ./eslint-out.html
       - store_artifacts:
           path: .
-          destination: "*-out.html" 
+          destination: eslint-out.html
 
   unit-test:
     docker:
