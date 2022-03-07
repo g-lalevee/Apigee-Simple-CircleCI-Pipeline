@@ -119,9 +119,7 @@ jobs:
           at: .
       - run:
           name: setup-hostname
-          command:            
-            TEST_HOST=34.117.38.184.nip.io
-            #TEST_HOST="$(APIGEE_ORG)-$(APIGEE_ENV).apigee.net"
+          command: echo "export TEST_HOST='34.117.38.184.nip.io'" >> $BASH_ENV
       - run:
           name: apickli
           command: |
