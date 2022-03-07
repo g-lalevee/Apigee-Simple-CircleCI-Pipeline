@@ -14,7 +14,8 @@ jobs:
       - run:
           name: static-code-analysis
           command: |
-            ./node_modules/apigeelint/cli.js -s ./apiproxy -f html.js -e PO013 > ./apigeelint-out.html
+            ./node_modules/apigeelint/cli.js -s ./apiproxy -f html.js -e PO013 
+            # > ./apigeelint-out.html
 
 
 
