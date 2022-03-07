@@ -54,9 +54,10 @@ jobs:
       - run:
           name: setup-environment
           command: |
-            # API_VERSION="apigeeapi" 
+            # echo "export API_VERSION='apigeeapi'" >> $BASH_ENV
             # or 
-            API_VERSION="googleapi"
+            echo "export API_VERSION='googleapi'" >> $BASH_ENV
+
             DEFAULT_APIGEE_ENV="default-dev"
             DEFAULT_APIGEE_ORG="bap-emea-apigee-5"
            
