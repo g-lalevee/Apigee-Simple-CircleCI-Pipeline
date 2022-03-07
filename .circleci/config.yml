@@ -1,6 +1,23 @@
 version: 2.1
 
 jobs:
+  static-code-analysis-:
+    docker:
+      - image: node:12-alpine
+    steps:
+      - checkout
+      - run:
+          name: install-dependencies
+          command: |
+            cd /root/project
+            npm install --silent --no-fund
+      - run:
+          name: static-code-analysis
+          command: |
+            ./node_modules/apigeelint/cli.js -s ./apiproxy -f html.js -e PO013 > ./apigeelint-out.html
+
+
+
   deploy_apigee:
     docker:
       - image: maven:latest
@@ -9,7 +26,6 @@ jobs:
       DEFAULT_APIGEE_ENV: default-dev
       DEFAULT_APIGEE_ORG: bap-emea-apigee-5
     steps:
-      - checkout
       - run:
           name: setup-environment
           command: |
@@ -59,4 +75,5 @@ workflows:
   version: 2
   apigee-deployment-and-tests:
     jobs:
-      - deploy_apigee
+      - static-code-analysis
+ #     - deploy_apigee
