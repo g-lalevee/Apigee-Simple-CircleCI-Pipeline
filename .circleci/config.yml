@@ -118,12 +118,8 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: setup-hostname
-          command:  echo 'export TEST_HOST="34.117.38.184.nip.io"' >> $BASH_ENV
-      - run:
           name: apickli
           command: |
-            echo $TEST_HOST
             export TEST_HOST="34.117.38.184.nip.io"
             
             sed -i "s/organization_hostname/$TEST_HOST/g" ./test/integration/features/support/init.js
@@ -142,11 +138,11 @@ workflows:
       - unit-test:
           requires: 
             - install-dependencies
-#      - deploy_apigee:
-#          requires: 
-#            - static-code-analysis
-#            - unit-test
+      - deploy_apigee:
+          requires: 
+            - static-code-analysis
+            - unit-test
       - integration-test:
          requires: 
             - install-dependencies
- #           - deploy_apigee
+            - deploy_apigee
