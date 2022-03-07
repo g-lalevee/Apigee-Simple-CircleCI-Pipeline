@@ -41,8 +41,6 @@ jobs:
           name: mocha
           command: ./node_modules/nyc/bin/nyc.js --reporter=html --reporter=text ./node_modules/mocha/bin/_mocha ./test/unit
 
-
-
   deploy_apigee:
     docker:
       - image: maven:latest
@@ -97,6 +95,24 @@ jobs:
           command: |
             mvn apigee-enterprise:deploy -Pgoogleapi -Denv=$APIGEE_ENV -Dsa=sa.json -Dorg=$APIGEE_ORG -Ddeployment.suffix=$APIGEE_BUILD_DEPLOYMENT_SUFFIX 
           
+# Integration test: test-integration
+  integration-test:
+    docker:
+      - image: node:12-alpine
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: apickli
+          command: |
+            sed -i "s/organization_hostname/$TEST_HOST/g" ./test/integration/features/support/init.js
+            node ./node_modules/cucumber/bin/cucumber-js ./test/integration --format json:./report.json
+            node ./test/integration/index.js
+
+
+
+
 workflows:
   version: 2
   apigee-deployment-and-tests:
@@ -108,5 +124,10 @@ workflows:
       - unit-test:
           requires: 
             - install-dependencies
-
- #     - deploy_apigee
+      - deploy_apigee:
+          requires: 
+            - static-code-analysis
+            - unit-test
+      - integration-test:
+          requires: 
+            - deploy_apigee
