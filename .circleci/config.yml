@@ -119,13 +119,13 @@ jobs:
           at: .
       - run:
           name: setup-hostname
-          command: |
-            echo 'export TEST_HOST="34.117.38.184.nip.io"' >> $BASH_ENV
-            cat  $BASH_ENV
+          command:  echo 'export TEST_HOST="34.117.38.184.nip.io"' >> $BASH_ENV
       - run:
           name: apickli
           command: |
             echo $TEST_HOST
+            export TEST_HOST="34.117.38.184.nip.io"
+            
             sed -i "s/organization_hostname/$TEST_HOST/g" ./test/integration/features/support/init.js
             node ./node_modules/cucumber/bin/cucumber-js ./test/integration --format json:./report.json
             node ./test/integration/index.js
