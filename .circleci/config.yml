@@ -15,15 +15,12 @@ jobs:
       - run:
           name: setup-environment
           command: |
-            # API_VERSION: "apigeeapi" 
+            # API_VERSION="apigeeapi" 
             # or 
-            API_VERSION: "googleapi"
-            DEFAULT_APIGEE_ENV: "default-dev"
-            DEFAULT_APIGEE_ORG: "bap-emea-apigee-5"
+            API_VERSION="googleapi"
+            DEFAULT_APIGEE_ENV="default-dev"
+            DEFAULT_APIGEE_ORG="bap-emea-apigee-5"
            
-            TEST_HOST: 34.117.38.184.nip.io
-            #TEST_HOST: "$(APIGEE_ORG)-$(APIGEE_ENV).apigee.net"
-
             GIT_BRANCH=$CIRCLE_BRANCH
             # Main branch for Apigee test environment
             if [ $CIRCLE_BRANCH == "main" ]; then
@@ -43,6 +40,9 @@ jobs:
                 echo "export APIGEE_DEPLOYMENT_SUFFIX=${CIRCLE_BRANCH// /-}" >> $BASH_ENV
               fi
             fi
+            
+            TEST_HOST=34.117.38.184.nip.io
+            #TEST_HOST="$(APIGEE_ORG)-$(APIGEE_ENV).apigee.net"
       - persist_to_workspace:
           root: .
           paths:
@@ -78,6 +78,10 @@ jobs:
       - image: maven:latest
     steps:
       - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "pom.xml" }} # appends cache key with a hash of pom.xml file
+            - v1-dependencies- # fallback in case previous cache key is not found
       - run:
           name: get-GCP-Service-Account
           command: |
@@ -102,7 +106,11 @@ jobs:
           name: mvn-deploy-proxy
           command: |
             mvn apigee-enterprise:deploy -Pgoogleapi -Denv=$APIGEE_ENV -Dsa=sa.json -Dorg=$APIGEE_ORG -Ddeployment.suffix=$APIGEE_BUILD_DEPLOYMENT_SUFFIX 
-          
+      - save_cache:
+            paths:
+              - ~/.m2
+            key: v1-dependencies-{{ checksum "pom.xml" }}
+                
 # Integration test: test-integration
   integration-test:
     docker:
