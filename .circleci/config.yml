@@ -12,37 +12,6 @@ jobs:
           command: |
             cd /root/project
             npm install --silent --no-fund
-      - run:
-          name: setup-environment
-          command: |
-            # API_VERSION="apigeeapi" 
-            # or 
-            API_VERSION="googleapi"
-            DEFAULT_APIGEE_ENV="default-dev"
-            DEFAULT_APIGEE_ORG="bap-emea-apigee-5"
-           
-            GIT_BRANCH=$CIRCLE_BRANCH
-            # Main branch for Apigee test environment
-            if [ $CIRCLE_BRANCH == "main" ]; then
-                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
-                echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
-                echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
-            # Prod branch for Apigee prod environment
-            else
-              if [ $CIRCLE_BRANCH == "prod" ]; then
-                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
-                echo "export APIGEE_ENV=$CIRCLE_BRANCH" >> $BASH_ENV
-                echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
-              # All other branches are deployed as separate proxies with suffix in the test environment
-              else
-                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
-                echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
-                echo "export APIGEE_DEPLOYMENT_SUFFIX=${CIRCLE_BRANCH// /-}" >> $BASH_ENV
-              fi
-            fi
-            
-            TEST_HOST=34.117.38.184.nip.io
-            #TEST_HOST="$(APIGEE_ORG)-$(APIGEE_ENV).apigee.net"
       - persist_to_workspace:
           root: .
           paths:
@@ -83,6 +52,34 @@ jobs:
             - v1-dependencies-{{ checksum "pom.xml" }} # appends cache key with a hash of pom.xml file
             - v1-dependencies- # fallback in case previous cache key is not found
       - run:
+          name: setup-environment
+          command: |
+            # API_VERSION="apigeeapi" 
+            # or 
+            API_VERSION="googleapi"
+            DEFAULT_APIGEE_ENV="default-dev"
+            DEFAULT_APIGEE_ORG="bap-emea-apigee-5"
+           
+            GIT_BRANCH=$CIRCLE_BRANCH
+            # Main branch for Apigee test environment
+            if [ $CIRCLE_BRANCH == "main" ]; then
+                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
+                echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
+            # Prod branch for Apigee prod environment
+            else
+              if [ $CIRCLE_BRANCH == "prod" ]; then
+                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                echo "export APIGEE_ENV=$CIRCLE_BRANCH" >> $BASH_ENV
+                echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
+              # All other branches are deployed as separate proxies with suffix in the test environment
+              else
+                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
+                echo "export APIGEE_DEPLOYMENT_SUFFIX=${CIRCLE_BRANCH// /-}" >> $BASH_ENV
+              fi
+            fi
+      - run:
           name: get-GCP-Service-Account
           command: |
             # Generate SA file from project variable
@@ -110,7 +107,7 @@ jobs:
             paths:
               - ~/.m2
             key: v1-dependencies-{{ checksum "pom.xml" }}
-                
+
 # Integration test: test-integration
   integration-test:
     docker:
@@ -120,12 +117,16 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: setup-hostname
+          command:            
+            TEST_HOST=34.117.38.184.nip.io
+            #TEST_HOST="$(APIGEE_ORG)-$(APIGEE_ENV).apigee.net"
+      - run:
           name: apickli
           command: |
             sed -i "s/organization_hostname/$TEST_HOST/g" ./test/integration/features/support/init.js
             node ./node_modules/cucumber/bin/cucumber-js ./test/integration --format json:./report.json
             node ./test/integration/index.js
-
 
 
 workflows:
