@@ -33,7 +33,7 @@ jobs:
       - run:
           name: install-curl
           command: |
-            npm install curl
+            npm -g install curl
       - continuation/continue:
             configuration_path: generated_config.yml # use newly generated config to continue
       - run:
