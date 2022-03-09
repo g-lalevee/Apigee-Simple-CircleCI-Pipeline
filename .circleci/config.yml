@@ -30,6 +30,8 @@ jobs:
       - image: node:12-alpine
     steps:
       - checkout
+      - continuation/continue:
+            configuration_path: generated_config.yml # use newly generated config to continue
       - run:
           name: install-dependencies
           command: |
