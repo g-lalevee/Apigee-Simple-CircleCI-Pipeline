@@ -1,6 +1,29 @@
 version: 2.1
 
+# this allows you to use CircleCI's dynamic configuration feature
+setup: true
+
+# the continuation orb is required in order to use dynamic configuration
+orbs:
+  continuation: circleci/continuation@0.1.2
+
+
 jobs:
+
+  setup:
+      executor: continuation/default
+      steps:
+        - checkout # checkout code
+        - run: # run a command
+            name: Generate config
+            command: |
+              #./generate-config > generated_config.yml
+              API_VERSION="googleapi"
+              echo '{ "API_VERSION": "'$API_VERSION'" }' >> generated_config.yml
+        - continuation/continue:
+            configuration_path: generated_config.yml # use newly generated config to continue
+
+       
 
   install-dependencies:
     docker:
@@ -10,6 +33,7 @@ jobs:
       - run:
           name: install-dependencies
           command: |
+            echo "API version ?" $API_VERSION
             cd /root/project
             npm install --silent --no-fund
       - persist_to_workspace:
@@ -41,6 +65,7 @@ jobs:
           path: eslint
           destination: eslint-out.html
 
+# Unit Test: Mocha (JS)
   unit-test:
     docker:
       - image: node:12-alpine
@@ -55,7 +80,7 @@ jobs:
           path: ./coverage/
           destination: index.html
 
-
+# Apigee Deployment: deploy configuration adn proxy with Maven
   deploy_apigee:
     docker:
       - image: maven:latest
@@ -150,18 +175,24 @@ workflows:
   version: 2
   apigee-deployment-and-tests:
     jobs:
-      - install-dependencies
-      - static-code-analysis:
-          requires: 
-            - install-dependencies
-      - unit-test:
-          requires: 
-            - install-dependencies
-      - deploy_apigee:
-          requires: 
-            - static-code-analysis
-            - unit-test
-      - integration-test:
-         requires: 
-            - install-dependencies
-            - deploy_apigee
+      - setup
+      - install-dependencies:
+          requires:
+            - setup
+#          when:
+#            condition:
+#            equal: [ main, << pipeline.git.branch >> ]
+#      - static-code-analysis:
+#          requires: 
+#            - install-dependencies
+#      - unit-test:
+#          requires: 
+#            - install-dependencies
+#      - deploy_apigee:
+##          requires: 
+#            - static-code-analysis
+#            - unit-test
+#      - integration-test:
+#         requires: 
+#            - install-dependencies
+#            - deploy_apigee
