@@ -85,9 +85,9 @@ jobs:
   deploy_apigee:
     docker:
       - image: maven:latest
-    when:
-      condition:
-        equal: [ googleapi, << pipeline.API_VERSION >> ]
+    - when:
+        condition:
+          equal: [ googleapi, << pipeline.API_VERSION >> ]
       steps:
         - checkout
         - restore_cache:
