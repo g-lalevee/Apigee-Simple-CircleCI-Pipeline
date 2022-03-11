@@ -4,13 +4,16 @@ version: 2.1
 parameters:
   API_VERSION:
     type: string
-    default: "googleapi"
+    default: "googleapi" # "apigeeapi"
   TEST_HOST:
     type: string
     default: "34.117.38.184.nip.io"
-
-
-          #      echo "API version ?" << pipeline.parameters.API_VERSION >>
+  DEFAULT_APIGEE_ENV:
+    type: string
+    default: "default-dev"
+  DEFAULT_APIGEE_ORG:
+    type: string
+    default: "bap-emea-apigee-5"
 
 
 jobs:
@@ -88,12 +91,11 @@ jobs:
       - run:
           name: setup-environment
           command: |
-            # echo "export API_VERSION='apigeeapi'" >> $BASH_ENV
-            # or 
             echo "export API_VERSION=<< pipeline.parameters.API_VERSION >>" >> $BASH_ENV
-
-            DEFAULT_APIGEE_ENV="default-dev"
-            DEFAULT_APIGEE_ORG="bap-emea-apigee-5"
+            DEFAULT_APIGEE_ENV=<< pipeline.parameters.API_VERSION >> 
+            DEFAULT_APIGEE_ORG=<< pipeline.parameters.API_VERSION >>
+            AUTHOR_EMAIL=${GITHUB_ACTOR}
+            echo author=$AUTHOR_EMAIL
            
             GIT_BRANCH=$CIRCLE_BRANCH
             # Main branch for Apigee test environment
@@ -174,17 +176,20 @@ workflows:
 #          when:
 #            condition:
 #            equal: [ main, << pipeline.git.branch >> ]
-      - static-code-analysis:
-          requires: 
-            - install-dependencies
+#      - static-code-analysis:
+#          requires: 
+#            - install-dependencies
 #      - unit-test:
 #          requires: 
 #            - install-dependencies
-      - deploy_apigee:
-          requires: 
-            - static-code-analysis
+      - deploy_apigee
+          when:
+            condition:
+            equal: [ "googleapi", << pipeline.parameters.API_VERSION >> ]
+#          requires: 
+#            - static-code-analysis
 #            - unit-test
-      - integration-test:
-         requires: 
-            - install-dependencies
-            - deploy_apigee
+#      - integration-test:
+#         requires: 
+#            - install-dependencies
+#            - deploy_apigee
