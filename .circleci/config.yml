@@ -34,12 +34,10 @@ jobs:
           name: install-curl
           command: |
             npm -g install curl
-      - continuation/continue:
-            configuration_path: generated_config.yml # use newly generated config to continue
       - run:
           name: install-dependencies
           command: |
-            echo "API version ?" $API_VERSION
+            echo "API version ?" << pipeline.parameters.API_VERSION >>
             cd /root/project
             npm install --silent --no-fund
       - persist_to_workspace:
