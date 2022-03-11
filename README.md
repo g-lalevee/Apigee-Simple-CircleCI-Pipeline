@@ -26,9 +26,9 @@ The CICD pipeline includes:
 
 ### API Proxy and Apigee configuration
 
-The folder [./apiproxy](./apiproxy) includes a simple API proxy bundle, a simple Apigee configuration file [./EdgeConfig/edge.json](./EdgeConfig/edge.json) as well as the following resources:
+The folder [./apiproxy](./apiproxy) includes a simple API proxy bundle, a simple Apigee configuration file [./EdgeConfig/edge.json](./EdgeConfig/edge.json). The root folder contains as well the following resources:
 
-- [config.yml File](./.circleci/config.yml) to define a CircleCI multi-branch pipeline.
+- [.circleci/config.yml File](./.circleci/config.yml) to define a CircleCI multi-branch pipeline.
 - [test Folder](./test) to hold the unit and integration tests.
 
 
@@ -48,7 +48,7 @@ The folder [./apiproxy](./apiproxy) includes a simple API proxy bundle, a simple
 ### CircleCI
 
 The setup described in this reference implementation is based on [CircleCI](https://circleci.com).<BR> 
-From your CircleCI account, create a new project linked to your GitHub repository: CircleCI [Projects and Pipelines](https://circleci.com/docs/2.0/project-build/#adding-projects).
+From your CircleCI account, create a new project linked to your GitHub repository: cf [CircleCI Projects and Pipelines](https://circleci.com/docs/2.0/project-build/#adding-projects).
 
 
 
@@ -133,7 +133,7 @@ git push -u origin feature/cicd-pipeline
 
 Using your favorite IDE...
 1.  Update the CircleCI **./.circleci/config.yml** file.<BR>
-In global **parameters** section, change **DEFAULT_APIGEE_ORG**, **DEFAULT_APIGEE_ENV**, **TEST_HOST** values by your target Apigee organization and environment, and the FQDN of the deployed API (used for integration testing).<BR>
+In global **parameters** section, change **DEFAULT_APIGEE_ORG**, **DEFAULT_APIGEE_ENV**, **TEST_HOST** values by your target Apigee organization and environment, and the FQDN of the (future) deployed API (used for integration testing).<BR>
 Update **API_VERSION** variable to define the Apigee target version: `googleapi` = Apigee X / Apigee hybrid, `apigeeapi` = Apigee Edge
 2.  Read carefully the **setup-environment** step in **deploy_apigee** job to check if the multibranch rules match your Git and Apigee environment naming and configuration.
 3. Save
