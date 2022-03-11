@@ -182,8 +182,11 @@ workflows:
 #      - unit-test:
 #          requires: 
 #            - install-dependencies
-      - deploy_apigee
-          when:  "googleapi" = << pipeline.parameters.API_VERSION >> 
+      - when:
+            condition:
+              equal: [ googleapi, << pipeline.parameters.API_VERSION >> ]
+            deploy_apigee
+         
 #          requires: 
 #            - static-code-analysis
 #            - unit-test
