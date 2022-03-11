@@ -8,7 +8,7 @@
 
 ## Goal
 
-Simple implementation for a CI/CD pipeline for Apigee using GitHub repository, [CicrcleCI](https://circleci.com/docs/2.0/pipelines/) and the [Apigee Deploy Maven Plugin](https://github.com/apigee/apigee-deploy-maven-plugin).  
+Simple implementation for a CI/CD pipeline for Apigee using GitHub repository, [CircleCI](https://circleci.com/docs/2.0/pipelines/) and the [Apigee Deploy Maven Plugin](https://github.com/apigee/apigee-deploy-maven-plugin).  
 
 The CICD pipeline includes:
 
@@ -21,7 +21,7 @@ The CICD pipeline includes:
 - Packaging and deployment of an Apigee configuration using [Apigee Config Maven Plugin](https://github.com/apigee/apigee-config-maven-plugin)
 - Packaging and deployment of the API proxy bundle using [Apigee Deploy Maven Plugin](https://github.com/apigee/apigee-deploy-maven-plugin)
 
-**This CICD pipeline allows deployment to both Apigee Edge and Apigee X/hybrid. A variable (API_VERSION) in .circleci/config.yml file defines the deployment target.**
+**This CICD pipeline allows deployment to both Apigee Edge and Apigee X/hybrid. <BR>A variable (API_VERSION) in .circleci/config.yml file defines the deployment target.**
 
 
 ### API Proxy and Apigee configuration
