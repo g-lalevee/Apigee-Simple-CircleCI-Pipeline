@@ -2,6 +2,9 @@ version: 2.1
 
 
 parameters:
+  GOOGLE_API:
+    type: boolean
+    default: true
   API_VERSION:
     type: string
     default: "googleapi" # "apigeeapi"
@@ -182,10 +185,9 @@ workflows:
 #      - unit-test:
 #          requires: 
 #            - install-dependencies
-      - when:
-            condition:
-              equal: [ googleapi, << pipeline.parameters.API_VERSION >> ]
-            deploy_apigee
+      - deploy_apigee
+          when: << pipeline.parameters.GOOGLE_API >>
+            
          
 #          requires: 
 #            - static-code-analysis
