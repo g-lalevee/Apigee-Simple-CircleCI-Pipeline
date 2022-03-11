@@ -86,8 +86,6 @@ jobs:
     - when:
         condition:
           equal: [ googleapi, << pipeline.API_VERSION >> ]
-      docker:
-        - image: maven:latest
       steps:
         - checkout
         - restore_cache:
