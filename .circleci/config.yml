@@ -83,71 +83,74 @@ jobs:
 
 # Apigee Deployment: deploy configuration adn proxy with Maven
   deploy_apigee:
-    - when:
-        condition:
-          equal: [ googleapi, << pipeline.API_VERSION >> ]
-      steps:
-        - checkout
-        - restore_cache:
-            keys:
-              - v1-dependencies-{{ checksum "pom.xml" }} # appends cache key with a hash of pom.xml file
-              - v1-dependencies- # fallback in case previous cache key is not found
-        - run:
-            name: setup-environment
-            command: |
-              echo "export API_VERSION=<< pipeline.parameters.API_VERSION >>" >> $BASH_ENV
-              DEFAULT_APIGEE_ENV=<< pipeline.parameters.API_VERSION >> 
-              DEFAULT_APIGEE_ORG=<< pipeline.parameters.API_VERSION >>
-              AUTHOR_EMAIL=${GITHUB_ACTOR}
-              echo author=$AUTHOR_EMAIL
-            
-              GIT_BRANCH=$CIRCLE_BRANCH
-              # Main branch for Apigee test environment
-              if [ $CIRCLE_BRANCH == "main" ]; then
-                  echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
-                  echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
-                  echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
-              # Prod branch for Apigee prod environment
-              else
-                if [ $CIRCLE_BRANCH == "prod" ]; then
-                  echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
-                  echo "export APIGEE_ENV=$CIRCLE_BRANCH" >> $BASH_ENV
-                  echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
-                # All other branches are deployed as separate proxies with suffix in the test environment
+    docker:
+      - image: maven:latest
+    steps:   
+      - when:
+          condition:
+            equal: [ googleapi, << pipeline.API_VERSION >> ]
+        steps:
+          - checkout
+          - restore_cache:
+              keys:
+                - v1-dependencies-{{ checksum "pom.xml" }} # appends cache key with a hash of pom.xml file
+                - v1-dependencies- # fallback in case previous cache key is not found
+          - run:
+              name: setup-environment
+              command: |
+                echo "export API_VERSION=<< pipeline.parameters.API_VERSION >>" >> $BASH_ENV
+                DEFAULT_APIGEE_ENV=<< pipeline.parameters.API_VERSION >> 
+                DEFAULT_APIGEE_ORG=<< pipeline.parameters.API_VERSION >>
+                AUTHOR_EMAIL=${GITHUB_ACTOR}
+                echo author=$AUTHOR_EMAIL
+              
+                GIT_BRANCH=$CIRCLE_BRANCH
+                # Main branch for Apigee test environment
+                if [ $CIRCLE_BRANCH == "main" ]; then
+                    echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                    echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
+                    echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
+                # Prod branch for Apigee prod environment
                 else
-                  echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
-                  echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
-                  echo "export APIGEE_DEPLOYMENT_SUFFIX=${CIRCLE_BRANCH// /-}" >> $BASH_ENV
+                  if [ $CIRCLE_BRANCH == "prod" ]; then
+                    echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                    echo "export APIGEE_ENV=$CIRCLE_BRANCH" >> $BASH_ENV
+                    echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
+                  # All other branches are deployed as separate proxies with suffix in the test environment
+                  else
+                    echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                    echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
+                    echo "export APIGEE_DEPLOYMENT_SUFFIX=${CIRCLE_BRANCH// /-}" >> $BASH_ENV
+                  fi
                 fi
-              fi
-        - run:
-            name: get-GCP-Service-Account
-            command: |
-              # Generate SA file from project variable
-              cd /root/project
-              echo $GCP_SERVICE_ACCOUNT > sa.json
-        - run:
-            name: mvn-deploy-config
-            command: |
-              sed -i "s/target_apigee_env/$APIGEE_ENV/g" ./EdgeConfig/edge.json
-              mvn install -P$API_VERSION -Dapigee.org=$APIGEE_ORG -Denv=$APIGEE_ENV -Dsa=sa.json -Dapigee.config.file=./EdgeConfig/edge.json -Dapigee.config.options=update
-        - run:
-            name: mvn-package-proxy
-            command: |
-              if [ "$AUTHOR_EMAIL" == "" ]; then AUTHOR_EMAIL="$GITLAB_USER_EMAIL"; fi
-              mvn process-resources -P$API_VERSION -Dcommit=$GIT_COMMIT -Dbranch=$GIT_BRANCH -Dauthor=$AUTHOR_EMAIL -Ddeployment.suffix=$APIGEE_DEPLOYMENT_SUFFIX
-        - run:
-            name: mvn-config-proxy
-            command: |
-              mvn apigee-enterprise:configure -P$API_VERSION -Dorg=$APIGEE_ORG -Denv=$APIGEE_ENV  -Ddeployment.suffix=$APIGEE_DEPLOYMENT_SUFFIX 
-        - run:
-            name: mvn-deploy-proxy
-            command: |
-              mvn apigee-enterprise:deploy -Pgoogleapi -Denv=$APIGEE_ENV -Dsa=sa.json -Dorg=$APIGEE_ORG -Ddeployment.suffix=$APIGEE_BUILD_DEPLOYMENT_SUFFIX 
-        - save_cache:
-              paths:
-                - ~/.m2
-              key: v1-dependencies-{{ checksum "pom.xml" }}
+          - run:
+              name: get-GCP-Service-Account
+              command: |
+                # Generate SA file from project variable
+                cd /root/project
+                echo $GCP_SERVICE_ACCOUNT > sa.json
+          - run:
+              name: mvn-deploy-config
+              command: |
+                sed -i "s/target_apigee_env/$APIGEE_ENV/g" ./EdgeConfig/edge.json
+                mvn install -P$API_VERSION -Dapigee.org=$APIGEE_ORG -Denv=$APIGEE_ENV -Dsa=sa.json -Dapigee.config.file=./EdgeConfig/edge.json -Dapigee.config.options=update
+          - run:
+              name: mvn-package-proxy
+              command: |
+                if [ "$AUTHOR_EMAIL" == "" ]; then AUTHOR_EMAIL="$GITLAB_USER_EMAIL"; fi
+                mvn process-resources -P$API_VERSION -Dcommit=$GIT_COMMIT -Dbranch=$GIT_BRANCH -Dauthor=$AUTHOR_EMAIL -Ddeployment.suffix=$APIGEE_DEPLOYMENT_SUFFIX
+          - run:
+              name: mvn-config-proxy
+              command: |
+                mvn apigee-enterprise:configure -P$API_VERSION -Dorg=$APIGEE_ORG -Denv=$APIGEE_ENV  -Ddeployment.suffix=$APIGEE_DEPLOYMENT_SUFFIX 
+          - run:
+              name: mvn-deploy-proxy
+              command: |
+                mvn apigee-enterprise:deploy -Pgoogleapi -Denv=$APIGEE_ENV -Dsa=sa.json -Dorg=$APIGEE_ORG -Ddeployment.suffix=$APIGEE_BUILD_DEPLOYMENT_SUFFIX 
+          - save_cache:
+                paths:
+                  - ~/.m2
+                key: v1-dependencies-{{ checksum "pom.xml" }}
 
 # Integration test: test-integration
   integration-test:
