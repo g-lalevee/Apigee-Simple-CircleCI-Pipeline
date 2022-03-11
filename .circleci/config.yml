@@ -4,10 +4,18 @@ version: 2.1
 parameters:
   API_VERSION:
     type: string
-    default: "apigeeapi"
+    default: "googleapi"
+  TEST_HOST:
+    type: string
+    default: "34.117.38.184.nip.io"
+
+
+          #      echo "API version ?" << pipeline.parameters.API_VERSION >>
+
 
 jobs:
-       
+
+# install npm package required for testing tools
   install-dependencies:
     docker:
       - image: node:12-alpine
@@ -20,7 +28,6 @@ jobs:
       - run:
           name: install-dependencies
           command: |
-            echo "API version ?" << pipeline.parameters.API_VERSION >>
             cd /root/project
             npm install --silent --no-fund
       - persist_to_workspace:
@@ -28,7 +35,7 @@ jobs:
           paths:
             - 'node_modules'
 
-# Static ode analysis: Apigeelint (Apigee), ESlint (JS)
+# Static code analysis: Apigeelint (Apigee), ESlint (JS)
   static-code-analysis:
     docker:
       - image: node:12-alpine
@@ -83,7 +90,7 @@ jobs:
           command: |
             # echo "export API_VERSION='apigeeapi'" >> $BASH_ENV
             # or 
-            echo "export API_VERSION='googleapi'" >> $BASH_ENV
+            echo "export API_VERSION=<< pipeline.parameters.API_VERSION >>" >> $BASH_ENV
 
             DEFAULT_APIGEE_ENV="default-dev"
             DEFAULT_APIGEE_ORG="bap-emea-apigee-5"
@@ -117,7 +124,7 @@ jobs:
           name: mvn-deploy-config
           command: |
             sed -i "s/target_apigee_env/$APIGEE_ENV/g" ./EdgeConfig/edge.json
-            mvn install -Pgoogleapi -Dapigee.org=$APIGEE_ORG -Denv=$APIGEE_ENV -Dsa=sa.json -Dapigee.config.file=./EdgeConfig/edge.json -Dapigee.config.options=update
+            mvn install -P$API_VERSION -Dapigee.org=$APIGEE_ORG -Denv=$APIGEE_ENV -Dsa=sa.json -Dapigee.config.file=./EdgeConfig/edge.json -Dapigee.config.options=update
       - run:
           name: mvn-package-proxy
           command: |
@@ -147,7 +154,7 @@ jobs:
       - run:
           name: apickli
           command: |
-            export TEST_HOST="34.117.38.184.nip.io"
+            export TEST_HOST=<< pipeline.parameters.TEST_HOST >>
             
             sed -i "s/organization_hostname/$TEST_HOST/g" ./test/integration/features/support/init.js
             node ./node_modules/cucumber/bin/cucumber-js ./test/integration --format json:./report.json
@@ -167,17 +174,17 @@ workflows:
 #          when:
 #            condition:
 #            equal: [ main, << pipeline.git.branch >> ]
-#      - static-code-analysis:
-#          requires: 
-#            - install-dependencies
+      - static-code-analysis:
+          requires: 
+            - install-dependencies
 #      - unit-test:
 #          requires: 
 #            - install-dependencies
-#      - deploy_apigee:
-##          requires: 
-#            - static-code-analysis
+      - deploy_apigee:
+          requires: 
+            - static-code-analysis
 #            - unit-test
-#      - integration-test:
-#         requires: 
-#            - install-dependencies
-#            - deploy_apigee
+      - integration-test:
+         requires: 
+            - install-dependencies
+            - deploy_apigee
