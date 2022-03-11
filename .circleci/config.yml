@@ -32,7 +32,7 @@ workflows:
       - unit-test:
           requires: 
             - install-dependencies
-      - deploy_apigee
+      - deploy_apigee:
           requires: 
             - static-code-analysis
             - unit-test
