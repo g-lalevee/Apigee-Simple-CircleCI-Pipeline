@@ -86,43 +86,43 @@ jobs:
     docker:
       - image: maven:latest
     steps:   
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "pom.xml" }} # appends cache key with a hash of pom.xml file
+            - v1-dependencies- # fallback in case previous cache key is not found
+      - run:
+          name: setup-environment
+          command: |
+            echo "export API_VERSION=<< pipeline.parameters.API_VERSION >>" >> $BASH_ENV
+            DEFAULT_APIGEE_ENV=<< pipeline.parameters.API_VERSION >> 
+            DEFAULT_APIGEE_ORG=<< pipeline.parameters.API_VERSION >>
+            AUTHOR_EMAIL=${GITHUB_ACTOR}
+            echo author=$AUTHOR_EMAIL
+          
+            GIT_BRANCH=$CIRCLE_BRANCH
+            # Main branch for Apigee test environment
+            if [ $CIRCLE_BRANCH == "main" ]; then
+                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
+                echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
+            # Prod branch for Apigee prod environment
+            else
+              if [ $CIRCLE_BRANCH == "prod" ]; then
+                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                echo "export APIGEE_ENV=$CIRCLE_BRANCH" >> $BASH_ENV
+                echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
+              # All other branches are deployed as separate proxies with suffix in the test environment
+              else
+                echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
+                echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
+                echo "export APIGEE_DEPLOYMENT_SUFFIX=${CIRCLE_BRANCH// /-}" >> $BASH_ENV
+              fi
+            fi
       - when:
           condition:
             equal: [ googleapi, << pipeline.parameters.API_VERSION >> ]
           steps:
-            - checkout
-            - restore_cache:
-                keys:
-                  - v1-dependencies-{{ checksum "pom.xml" }} # appends cache key with a hash of pom.xml file
-                  - v1-dependencies- # fallback in case previous cache key is not found
-            - run:
-                name: setup-environment
-                command: |
-                  echo "export API_VERSION=<< pipeline.parameters.API_VERSION >>" >> $BASH_ENV
-                  DEFAULT_APIGEE_ENV=<< pipeline.parameters.API_VERSION >> 
-                  DEFAULT_APIGEE_ORG=<< pipeline.parameters.API_VERSION >>
-                  AUTHOR_EMAIL=${GITHUB_ACTOR}
-                  echo author=$AUTHOR_EMAIL
-                
-                  GIT_BRANCH=$CIRCLE_BRANCH
-                  # Main branch for Apigee test environment
-                  if [ $CIRCLE_BRANCH == "main" ]; then
-                      echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
-                      echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
-                      echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
-                  # Prod branch for Apigee prod environment
-                  else
-                    if [ $CIRCLE_BRANCH == "prod" ]; then
-                      echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
-                      echo "export APIGEE_ENV=$CIRCLE_BRANCH" >> $BASH_ENV
-                      echo "export APIGEE_DEPLOYMENT_SUFFIX=''" >> $BASH_ENV
-                    # All other branches are deployed as separate proxies with suffix in the test environment
-                    else
-                      echo "export APIGEE_ORG=$DEFAULT_APIGEE_ORG" >> $BASH_ENV
-                      echo "export APIGEE_ENV=$DEFAULT_APIGEE_ENV" >> $BASH_ENV
-                      echo "export APIGEE_DEPLOYMENT_SUFFIX=${CIRCLE_BRANCH// /-}" >> $BASH_ENV
-                    fi
-                  fi
             - run:
                 name: get-GCP-Service-Account
                 command: |
@@ -147,7 +147,7 @@ jobs:
                 name: mvn-deploy-proxy
                 command: |
                   mvn apigee-enterprise:deploy -Pgoogleapi -Denv=$APIGEE_ENV -Dsa=sa.json -Dorg=$APIGEE_ORG -Ddeployment.suffix=$APIGEE_BUILD_DEPLOYMENT_SUFFIX 
-            - save_cache:
+      - save_cache:
                   paths:
                     - ~/.m2
                   key: v1-dependencies-{{ checksum "pom.xml" }}
