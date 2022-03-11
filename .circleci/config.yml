@@ -85,6 +85,9 @@ jobs:
   deploy_apigee:
     docker:
       - image: maven:latest
+    when:
+      condition:
+        equal: [ googleapi, << pipeline.API_VERSION >> ]
     steps:
       - checkout
       - restore_cache:
@@ -186,9 +189,6 @@ workflows:
 #          requires: 
 #            - install-dependencies
       - deploy_apigee
-          Should_Run: << pipeline.parameters.GOOGLE_API >>
-            
-         
 #          requires: 
 #            - static-code-analysis
 #            - unit-test
