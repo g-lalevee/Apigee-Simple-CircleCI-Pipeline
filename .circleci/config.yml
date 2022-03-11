@@ -2,6 +2,7 @@ version: 2.1
 
 
 parameters:
+
   GOOGLE_API:
     type: boolean
     default: true
@@ -17,6 +18,28 @@ parameters:
   DEFAULT_APIGEE_ORG:
     type: string
     default: "bap-emea-apigee-5"
+
+
+workflows:
+
+  version: 2
+  apigee-deployment-and-tests:
+    jobs:
+      - install-dependencies
+      - static-code-analysis:
+          requires: 
+            - install-dependencies
+      - unit-test:
+          requires: 
+            - install-dependencies
+      - deploy_apigee
+          requires: 
+            - static-code-analysis
+            - unit-test
+      - integration-test:
+         requires: 
+            - install-dependencies
+            - deploy_apigee
 
 
 jobs:
@@ -97,9 +120,6 @@ jobs:
             echo "export API_VERSION=<< pipeline.parameters.API_VERSION >>" >> $BASH_ENV
             DEFAULT_APIGEE_ORG=<< pipeline.parameters.DEFAULT_APIGEE_ORG >> 
             DEFAULT_APIGEE_ENV=<< pipeline.parameters.DEFAULT_APIGEE_ENV >>
-            
-            AUTHOR_EMAIL=${GITHUB_ACTOR}
-            echo "author="$AUTHOR_EMAIL
           
             GIT_BRANCH=$CIRCLE_BRANCH
             # Main branch for Apigee test environment
@@ -139,7 +159,6 @@ jobs:
             - run:
                 name: mvn-package-proxy
                 command: |
-                  if [ "$AUTHOR_EMAIL" == "" ]; then AUTHOR_EMAIL="$GITLAB_USER_EMAIL"; fi
                   mvn process-resources -P$API_VERSION -Dcommit=$GIT_COMMIT -Dbranch=$GIT_BRANCH  -Ddeployment.suffix=$APIGEE_DEPLOYMENT_SUFFIX
             - run:
                 name: mvn-config-proxy
@@ -162,8 +181,7 @@ jobs:
             - run:
                 name: mvn-package-proxy
                 command: |
-                  if [ "$AUTHOR_EMAIL" == "" ]; then AUTHOR_EMAIL="$GITLAB_USER_EMAIL"; fi
-                  mvn process-resources -Papigeeapi -Dcommit=$GIT_COMMIT -Dbranch=$GIT_BRANCH -Dauthor=$AUTHOR_EMAIL -Ddeployment.suffix=$APIGEE_DEPLOYMENT_SUFFIX
+                  mvn process-resources -Papigeeapi -Dcommit=$GIT_COMMIT -Dbranch=$GIT_BRANCH -Ddeployment.suffix=$APIGEE_DEPLOYMENT_SUFFIX
             - run:
                 name: mvn-config-proxy
                 command: |
@@ -200,25 +218,3 @@ jobs:
           path: apickli
           destination: cucumber_report.html
 
-workflows:
-  version: 2
-  apigee-deployment-and-tests:
-    jobs:
-#      - install-dependencies
-#          when:
-#            condition:
-#            equal: [ main, << pipeline.git.branch >> ]
-#      - static-code-analysis:
-#          requires: 
-#            - install-dependencies
-#      - unit-test:
-#          requires: 
-#            - install-dependencies
-      - deploy_apigee
-#          requires: 
-#            - static-code-analysis
-#            - unit-test
-#      - integration-test:
-#         requires: 
-#            - install-dependencies
-#            - deploy_apigee
