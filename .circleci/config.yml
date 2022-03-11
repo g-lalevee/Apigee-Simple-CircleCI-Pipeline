@@ -7,6 +7,10 @@ setup: true
 orbs:
   continuation: circleci/continuation@0.1.2
 
+parameters:
+  API_VERSION:
+    type: string
+    default: "apigeeapi"
 
 jobs:
 
@@ -24,7 +28,6 @@ jobs:
             configuration_path: generated_config.yml # use newly generated config to continue
 
        
-
   install-dependencies:
     docker:
       - image: node:12-alpine
