@@ -195,7 +195,7 @@ jobs:
                     - ~/.m2
                   key: v1-dependencies-{{ checksum "pom.xml" }}
 
-# Integration test: test-integration
+# Integration test: Apickli
   integration-test:
     docker:
       - image: node:12-alpine
