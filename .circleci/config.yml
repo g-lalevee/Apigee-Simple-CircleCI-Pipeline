@@ -1,11 +1,5 @@
 version: 2.1
 
-# this allows you to use CircleCI's dynamic configuration feature
-setup: true
-
-# the continuation orb is required in order to use dynamic configuration
-orbs:
-  continuation: circleci/continuation@0.1.2
 
 parameters:
   API_VERSION:
@@ -13,20 +7,6 @@ parameters:
     default: "apigeeapi"
 
 jobs:
-
-  setup:
-      executor: continuation/default
-      steps:
-        - checkout # checkout code
-        - run: # run a command
-            name: Generate config
-            command: |
-              #./generate-config > generated_config.yml
-              API_VERSION="googleapi"
-              echo '{ "API_VERSION": "'$API_VERSION'" }' >> generated_config.yml
-        - continuation/continue:
-            configuration_path: generated_config.yml # use newly generated config to continue
-
        
   install-dependencies:
     docker:
@@ -183,10 +163,7 @@ workflows:
   version: 2
   apigee-deployment-and-tests:
     jobs:
-      - setup
-      - install-dependencies:
-          requires:
-            - setup
+      - install-dependencies
 #          when:
 #            condition:
 #            equal: [ main, << pipeline.git.branch >> ]
