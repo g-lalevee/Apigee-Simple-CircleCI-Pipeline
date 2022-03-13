@@ -11,13 +11,13 @@ parameters:
     default: "googleapi" # "apigeeapi"
   TEST_HOST:
     type: string
-    default: "34.117.38.184.nip.io"
+    default: "<YOUR-HOSTNAME>"
   DEFAULT_APIGEE_ENV:
     type: string
-    default: "default-dev"
+    default: "<YOUR-ENV>"
   DEFAULT_APIGEE_ORG:
     type: string
-    default: "bap-emea-apigee-5"
+    default: "<YOUR-ORG>"
 
 
 workflows:
