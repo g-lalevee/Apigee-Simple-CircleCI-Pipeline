@@ -116,6 +116,7 @@ jobs:
       - run:
           name: setup-environment
           command: |
+            echo "setup-environment"
             echo "export API_VERSION=<< pipeline.parameters.API_VERSION >>" >> $BASH_ENV
             DEFAULT_APIGEE_ORG=<< pipeline.parameters.DEFAULT_APIGEE_ORG >> 
             DEFAULT_APIGEE_ENV=<< pipeline.parameters.DEFAULT_APIGEE_ENV >>
