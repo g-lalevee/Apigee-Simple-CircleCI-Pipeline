@@ -1,6 +1,5 @@
 version: 2.1
 
-
 parameters:
 
   GOOGLE_API:
@@ -11,13 +10,13 @@ parameters:
     default: "googleapi" # "apigeeapi"
   TEST_HOST:
     type: string
-    default: "<YOUR-HOSTNAME>"
+    default: "34.117.38.184.nip.io"
   DEFAULT_APIGEE_ENV:
     type: string
-    default: "<YOUR-ENV>"
+    default: "default-dev"
   DEFAULT_APIGEE_ORG:
     type: string
-    default: "<YOUR-ORG>"
+    default: "bap-emea-apigee-5"
 
 
 workflows:
@@ -116,7 +115,6 @@ jobs:
       - run:
           name: setup-environment
           command: |
-            echo "setup-environment"
             echo "export API_VERSION=<< pipeline.parameters.API_VERSION >>" >> $BASH_ENV
             DEFAULT_APIGEE_ORG=<< pipeline.parameters.DEFAULT_APIGEE_ORG >> 
             DEFAULT_APIGEE_ENV=<< pipeline.parameters.DEFAULT_APIGEE_ENV >>
